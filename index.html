@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassCompass - Complete School Management System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 2rem;
+        }
+        
+        .logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+        }
+        
+        .signup-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .signup-card {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 15px;
+            padding: 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .signup-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+        
+        .signup-card.school { background: linear-gradient(135deg, #28a745, #20c997); }
+        .signup-card.teacher { background: linear-gradient(135deg, #007bff, #0056b3); }
+        .signup-card.student { background: linear-gradient(135deg, #ffc107, #fd7e14); }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .btn {
+            background: #667eea;
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        
+        .btn:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+        }
+        
+        .btn-success { background: #28a745; }
+        .btn-primary { background: #007bff; }
+        .btn-warning { background: #ffc107; color: #333; }
+        
+        .login-options {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        
+        .login-btn {
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .login-btn.admin { background: linear-gradient(135deg, #dc3545, #bd2130); }
+        .login-btn.teacher { background: linear-gradient(135deg, #007bff, #0056b3); }
+        .login-btn.student { background: linear-gradient(135deg, #28a745, #1e7e34); }
+        
+        .navbar {
+            background: rgba(255,255,255,0.95);
+            padding: 1rem 0;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+        
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+        }
+        
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .nav-item {
+            padding: 0.5rem 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .app-grid {
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            gap: 2rem;
+        }
+        
+        .sidebar {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .sidebar-item {
+            display: block;
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            background: transparent;
+            border: none;
+            text-align: left;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        
+        .sidebar-item:hover, .sidebar-item.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .main-content {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 600px;
+        }
+        
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 1px;
+            background: #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            margin: 1rem 0;
+        }
+        
+        .schedule-day {
+            background: white;
+            padding: 1rem;
+            min-height: 120px;
+            position: relative;
+        }
+        
+        .schedule-day-header {
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #667eea;
+            text-align: center;
+        }
+        
+        .schedule-event {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-bottom: 0.25rem;
+            cursor: pointer;
+        }
+        
+        .start-monitor-btn {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 1rem 0;
+        }
+        
+        .start-monitor-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(40, 167, 69, 0.3);
+        }
+        
+        .start-monitor-btn.active {
+            background: linear-gradient(135deg, #dc3545, #fd7e14);
+            animation: pulse 2s infinite;
+        }
+        
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+        
+        .table th, .table td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+        
+        .table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #28a745;
+            color: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            max-width: 400px;
+        }
+        
+        .notification.warning { background: #ffc107; color: #333; }
+        .notification.error { background: #dc3545; }
+        .notification.info { background: #17a2b8; }
+        
+        .hidden { display: none; }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal.show {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .close {
+            float: right;
+            font-size: 1.5rem;
+            cursor: pointer;
+            margin-bottom: 1rem;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @media (max-width: 768px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+            .signup-grid {
+                grid-template-columns: 1fr;
+            }
+            .login-options {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Welcome/Signup Screen -->
+    <div id="welcomeScreen">
+        <div class="container">
+            <div class="header">
+                <div class="logo">🎓</div>
+                <h1>ClassCompass</h1>
+                <p>Complete School Management System</p>
+            </div>
+
+            <div class="card">
+                <h2 style="text-align: center; margin-bottom: 2rem;">Welcome to ClassCompass</h2>
+                <p style="text-align: center; margin-bottom: 2rem;">Choose your signup type or login to continue</p>
+                
+                <!-- Signup Options -->
+                <h3>New Registration</h3>
+                <div class="signup-grid">
+                    <div class="signup-card school" onclick="showSignupForm('school')">
+                        <i class="fas fa-school" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>School Signup</h3>
+                        <p>Register your school with ClassCompass</p>
+                    </div>
+                    <div class="signup-card teacher" onclick="showSignupForm('teacher')">
+                        <i class="fas fa-chalkboard-teacher" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Teacher Signup</h3>
+                        <p>Join as a teacher to manage classes</p>
+                    </div>
+                    <div class="signup-card student" onclick="showSignupForm('student')">
+                        <i class="fas fa-user-graduate" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                        <h3>Student Signup</h3>
+                        <p>Register as a student to access courses</p>
+                    </div>
+                </div>
+
+                <!-- Login Options -->
+                <h3 style="margin-top: 2rem;">Already Have an Account?</h3>
+                <div class="login-options">
+                    <div class="login-btn admin" onclick="showLoginForm('admin')">
+                        <i class="fas fa-user-shield" style="display: block; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        Admin Login
+                    </div>
+                    <div class="login-btn teacher" onclick="showLoginForm('teacher')">
+                        <i class="fas fa-chalkboard-teacher" style="display: block; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        Teacher Login
+                    </div>
+                    <div class="login-btn student" onclick="showLoginForm('student')">
+                        <i class="fas fa-user-graduate" style="display: block; font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        Student Login
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Signup Forms -->
+    <div id="signupScreen" class="hidden">
+        <div class="container">
+            <div class="card">
+                <button onclick="goBack()" style="float: left; background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">← Back</button>
+                <h2 id="signupTitle" style="text-align: center; margin-bottom: 2rem;">Signup</h2>
+                
+                <form id="signupForm" onsubmit="handleSignup(event)">
+                    <div id="signupFields">
+                        <!-- Dynamic signup fields will be inserted here -->
+                    </div>
+                    <button type="submit" class="btn">Complete Signup</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login Screen -->
+    <div id="loginScreen" class="hidden">
+        <div class="container">
+            <div class="card">
+                <button onclick="goBack()" style="float: left; background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer;">← Back</button>
+                <h2 id="loginTitle" style="text-align: center; margin-bottom: 2rem;">Login</h2>
+                
+                <form id="loginForm" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>Username/Email</label>
+                        <input type="text" id="loginUsername" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <input type="password" id="loginPassword" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn" id="loginButton">Login</button>
+                </form>
+                <p style="text-align: center; margin-top: 1rem; color: #666;">Demo credentials: username: <code>demo</code>, password: <code>demo</code></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="mainApp" class="hidden">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">🎓 ClassCompass</div>
+                <div class="nav-menu">
+                    <span id="userInfo">Welcome</span>
+                    <button class="nav-item" onclick="logout()">Logout</button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="app-grid">
+                <div class="sidebar">
+                    <h4 style="margin-bottom: 1rem;" id="sidebarTitle">Dashboard</h4>
+                    <div id="sidebarMenu">
+                        <!-- Dynamic menu items will be inserted here -->
+                    </div>
+                </div>
+
+                <div class="main-content">
+                    <div id="dashboardContent">
+                        <!-- Dynamic content will be inserted here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Modal -->
+    <div id="scheduleModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('scheduleModal')">&times;</span>
+            <h3>Add Class Schedule</h3>
+            <form id="scheduleForm" onsubmit="handleScheduleSubmit(event)">
+                <div class="form-group">
+                    <label>Class Name</label>
+                    <input type="text" name="className" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Teacher</label>
+                    <select name="teacher" class="form-control" required>
+                        <option value="">Select Teacher</option>
+                        <option value="Dr. Sarah Wilson">Dr. Sarah Wilson</option>
+                        <option value="Prof. David Lee">Prof. David Lee</option>
+                        <option value="Ms. Lisa Garcia">Ms. Lisa Garcia</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Date</label>
+                    <input type="date" name="date" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Start Time</label>
+                    <input type="time" name="startTime" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>End Time</label>
+                    <input type="time" name="endTime" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label>Room</label>
+                    <input type="text" name="room" class="form-control" required>
+                </div>
+                <button type="submit" class="btn">Save Schedule</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Global Variables
+        let currentUser = null;
+        let userType = null;
+        let currentScreen = 'welcome';
+        let currentSection = 'dashboard';
+        let scheduleData = [];
+        let homeworkData = [];
+        let studentsData = [];
+        let teachersData = [];
+        let isMonitoring = false;
+        let notificationTimers = [];
+        let currentWeek = 0;
+
+        // Initialize Application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 ClassCompass System Starting...');
+            initializeData();
+        });
+
+        // Initialize Sample Data
+        function initializeData() {
+            const today = new Date();
+            const currentWeekStart = new Date(today);
+            currentWeekStart.setDate(today.getDate() - today.getDay());
+            
+            scheduleData = [
+                {
+                    id: 1,
+                    className: 'Mathematics',
+                    teacher: 'Dr. Sarah Wilson',
+                    date: formatDate(addDays(currentWeekStart, 1)),
+                    startTime: '09:00',
+                    endTime: '10:30',
+                    room: 'Room 101',
+                    students: ['john.smith', 'emma.johnson']
+                },
+                {
+                    id: 2,
+                    className: 'Science Lab',
+                    teacher: 'Prof. David Lee',
+                    date: formatDate(addDays(currentWeekStart, 1)),
+                    startTime: '11:00',
+                    endTime: '12:30',
+                    room: 'Lab 1',
+                    students: ['john.smith', 'emma.johnson']
+                },
+                {
+                    id: 3,
+                    className: 'English Literature',
+                    teacher: 'Ms. Lisa Garcia',
+                    date: formatDate(addDays(currentWeekStart, 2)),
+                    startTime: '14:00',
+                    endTime: '15:30',
+                    room: 'Room 203',
+                    students: ['john.smith']
+                }
+            ];
+
+            homeworkData = [
+                {
+                    id: 1,
+                    title: 'Algebra Problem Set 5',
+                    subject: 'Mathematics',
+                    teacher: 'Dr. Sarah Wilson',
+                    dueDate: '2025-06-15',
+                    description: 'Complete problems 1-20 from chapter 5',
+                    submissions: [],
+                    assignedTo: ['john.smith', 'emma.johnson']
+                }
+            ];
+
+            studentsData = [
+                { id: 'john.smith', name: 'John Smith', email: 'john@school.com', grade: '10' },
+                { id: 'emma.johnson', name: 'Emma Johnson', email: 'emma@school.com', grade: '10' }
+            ];
+
+            teachersData = [
+                { id: 'sarah.wilson', name: 'Dr. Sarah Wilson', subject: 'Mathematics' },
+                { id: 'david.lee', name: 'Prof. David Lee', subject: 'Science' },
+                { id: 'lisa.garcia', name: 'Ms. Lisa Garcia', subject: 'English' }
+            ];
+        }
+
+        // Navigation Functions
+        function showSignupForm(type) {
+            currentScreen = 'signup';
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('signupScreen').classList.remove('hidden');
+            
+            const title = document.getElementById('signupTitle');
+            const fields = document.getElementById('signupFields');
+            
+            switch(type) {
+                case 'school':
+                    title.textContent = 'School Registration';
+                    fields.innerHTML = `
+                        <div class="form-group">
+                            <label>School Name</label>
+                            <input type="text" name="schoolName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Administrator Name</label>
+                            <input type="text" name="adminName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <input type="hidden" name="userType" value="admin">
+                    `;
+                    break;
+                    
+                case 'teacher':
+                    title.textContent = 'Teacher Registration';
+                    fields.innerHTML = `
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="fullName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Subject</label>
+                            <select name="subject" class="form-control" required>
+                                <option value="">Select Subject</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="English">English</option>
+                                <option value="History">History</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <input type="hidden" name="userType" value="teacher">
+                    `;
+                    break;
+                    
+                case 'student':
+                    title.textContent = 'Student Registration';
+                    fields.innerHTML = `
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" name="fullName" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Email</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Grade Level</label>
+                            <select name="grade" class="form-control" required>
+                                <option value="">Select Grade</option>
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="password" name="password" class="form-control" required>
+                        </div>
+                        <input type="hidden" name="userType" value="student">
+                    `;
+                    break;
+            }
+        }
+
+        function showLoginForm(type) {
+            currentScreen = 'login';
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.remove('hidden');
+            
+            const title = document.getElementById('loginTitle');
+            const button = document.getElementById('loginButton');
+            
+            switch(type) {
+                case 'admin':
+                    title.innerHTML = '<i class="fas fa-user-shield"></i> Administrator Login';
+                    button.style.background = '#dc3545';
+                    break;
+                case 'teacher':
+                    title.innerHTML = '<i class="fas fa-chalkboard-teacher"></i> Teacher Login';
+                    button.style.background = '#007bff';
+                    break;
+                case 'student':
+                    title.innerHTML = '<i class="fas fa-user-graduate"></i> Student Login';
+                    button.style.background = '#28a745';
+                    break;
+            }
+            
+            document.getElementById('loginForm').setAttribute('data-user-type', type);
+        }
+
+        function goBack() {
+            if (currentScreen === 'signup' || currentScreen === 'login') {
+                document.getElementById('signupScreen').classList.add('hidden');
+                document.getElementById('loginScreen').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                currentScreen = 'welcome';
+            }
+        }
+
+        // Handle Forms
+        function handleSignup(e) {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const userData = Object.fromEntries(formData.entries());
+            
+            showNotification(`${userData.userType.charAt(0).toUpperCase() + userData.userType.slice(1)} registration successful!`, 'success');
+            
+            setTimeout(() => {
+                loginUser(userData.email || 'demo', userData.userType);
+            }, 1500);
+        }
+
+        function handleLogin(e) {
+            e.preventDefault();
+            
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const userType = e.target.getAttribute('data-user-type');
+            
+            // Simple demo login
+            if ((username === 'demo' && password === 'demo') || 
+                (username === userType && password === userType + '123')) {
+                showNotification('Login successful!', 'success');
+                setTimeout(() => {
+                    loginUser(username, userType);
+                }, 1000);
+            } else {
+                showNotification('Invalid credentials. Try demo/demo for any user type.', 'error');
+            }
+        }
+
+        function loginUser(username, type) {
+            currentUser = username;
+            userType = type;
+            currentScreen = 'main';
+            
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('signupScreen').classList.add('hidden');
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            
+            setupDashboard(type);
+            document.getElementById('userInfo').textContent = `Welcome, ${username} (${type.charAt(0).toUpperCase() + type.slice(1)})`;
+        }
+
+        function setupDashboard(type) {
+            const sidebarTitle = document.getElementById('sidebarTitle');
+            const sidebarMenu = document.getElementById('sidebarMenu');
+            
+            switch(type) {
+                case 'admin':
+                    sidebarTitle.textContent = 'Admin Dashboard';
+                    sidebarMenu.innerHTML = `
+                        <button class="sidebar-item active" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('teachers')">
+                            <i class="fas fa-chalkboard-teacher"></i> Teachers
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('reports')">
+                            <i class="fas fa-chart-bar"></i> Reports
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('settings')">
+                            <i class="fas fa-cog"></i> Settings
+                        </button>
+                    `;
+                    break;
+                    
+                case 'teacher':
+                    sidebarTitle.textContent = 'Teacher Dashboard';
+                    sidebarMenu.innerHTML = `
+                        <button class="sidebar-item active" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('schedule')">
+                            <i class="fas fa-calendar-alt"></i> My Schedule
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('classes')">
+                            <i class="fas fa-users"></i> My Classes
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('homework')">
+                            <i class="fas fa-book"></i> Assignments
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('grades')">
+                            <i class="fas fa-star"></i> Grades
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('attendance')">
+                            <i class="fas fa-calendar-check"></i> Attendance
+                        </button>
+                    `;
+                    break;
+                    
+                case 'student':
+                    sidebarTitle.textContent = 'Student Dashboard';
+                    sidebarMenu.innerHTML = `
+                        <button class="sidebar-item active" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('schedule')">
+                            <i class="fas fa-calendar-alt"></i> My Schedule
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('homework')">
+                            <i class="fas fa-book"></i> Assignments
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('grades')">
+                            <i class="fas fa-star"></i> My Grades
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('submissions')">
+                            <i class="fas fa-upload"></i> Submit Work
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('progress')">
+                            <i class="fas fa-chart-line"></i> Progress
+                        </button>
+                    `;
+                    break;
+            }
+            
+            showSection('dashboard');
+        }
+
+        // Show Section Content
+        function showSection(section) {
+            currentSection = section;
+            
+            // Update active sidebar item
+            document.querySelectorAll('.sidebar-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            const content = document.getElementById('dashboardContent');
+            
+            switch(section) {
+                case 'dashboard':
+                    showDashboardContent(content);
+                    break;
+                case 'schedule':
+                    showScheduleContent(content);
+                    break;
+                case 'students':
+                    showStudentsContent(content);
+                    break;
+                case 'teachers':
+                    showTeachersContent(content);
+                    break;
+                case 'classes':
+                    showClassesContent(content);
+                    break;
+                case 'homework':
+                    showHomeworkContent(content);
+                    break;
+                case 'grades':
+                    showGradesContent(content);
+                    break;
+                case 'attendance':
+                    showAttendanceContent(content);
+                    break;
+                case 'submissions':
+                    showSubmissionsContent(content);
+                    break;
+                case 'progress':
+                    showProgressContent(content);
+                    break;
+                case 'reports':
+                    showReportsContent(content);
+                    break;
+                case 'settings':
+                    showSettingsContent(content);
+                    break;
+            }
+        }
+
+        // Dashboard Content Functions
+        function showDashboardContent(content) {
+            if (userType === 'admin') {
+                content.innerHTML = `
+                    <h2>📊 Administrator Dashboard</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div class="card">
+                            <h4>👥 Total Students</h4>
+                            <h2>${studentsData.length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>👨‍🏫 Total Teachers</h4>
+                            <h2>${teachersData.length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📅 Today's Classes</h4>
+                            <h2>${getTodayClasses().length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📚 Active Assignments</h4>
+                            <h2>${homeworkData.length}</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🚀 Quick Actions</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <button class="btn" onclick="showSection('schedule')">Manage Schedules</button>
+                            <button class="btn" onclick="showSection('students')">View Students</button>
+                            <button class="btn" onclick="showSection('teachers')">View Teachers</button>
+                            <button class="btn" onclick="showSection('reports')">View Reports</button>
+                        </div>
+                    </div>
+                `;
+            } else if (userType === 'teacher') {
+                content.innerHTML = `
+                    <h2>📚 Teacher Dashboard</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div class="card">
+                            <h4>👥 My Students</h4>
+                            <h2>${studentsData.length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📅 Today's Classes</h4>
+                            <h2>${getTodayClasses().length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📝 Pending Grading</h4>
+                            <h2>5</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📚 Active Assignments</h4>
+                            <h2>${homeworkData.length}</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🚀 Quick Actions</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <button class="btn" onclick="createAssignment()">Create Assignment</button>
+                            <button class="btn" onclick="showSection('grades')">Grade Work</button>
+                            <button class="btn" onclick="showSection('attendance')">Mark Attendance</button>
+                            <button class="btn" onclick="showSection('schedule')">View Schedule</button>
+                        </div>
+                    </div>
+                `;
+            } else if (userType === 'student') {
+                content.innerHTML = `
+                    <h2>🎓 Student Dashboard</h2>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div class="card">
+                            <h4>📅 Today's Classes</h4>
+                            <h2>${getTodayClasses().length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📝 Pending Assignments</h4>
+                            <h2>${homeworkData.length}</h2>
+                        </div>
+                        <div class="card">
+                            <h4>⭐ Current GPA</h4>
+                            <h2>3.8</h2>
+                        </div>
+                        <div class="card">
+                            <h4>📊 Attendance Rate</h4>
+                            <h2>95%</h2>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>📋 Upcoming Assignments</h4>
+                        ${renderUpcomingAssignments()}
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🚀 Quick Actions</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+                            <button class="btn" onclick="showSection('homework')">View Assignments</button>
+                            <button class="btn" onclick="showSection('submissions')">Submit Work</button>
+                            <button class="btn" onclick="showSection('grades')">Check Grades</button>
+                            <button class="btn" onclick="showSection('schedule')">View Schedule</button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showScheduleContent(content) {
+            const isAdmin = userType === 'admin';
+            const hasNotifications = userType === 'teacher' || userType === 'student';
+            
+            content.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                    <h2>📅 Schedule ${isAdmin ? 'Management' : ''}</h2>
+                    <div>
+                        ${hasNotifications ? `
+                            <button id="scheduleMonitorBtn" class="start-monitor-btn" onclick="toggleScheduleMonitoring()">
+                                🚀 Start Notifications
+                            </button>
+                        ` : ''}
+                        ${isAdmin ? `
+                            <button class="btn" onclick="showScheduleModal()">Add Class</button>
+                        ` : ''}
+                    </div>
+                </div>
+                
+                ${hasNotifications ? `
+                    <div id="monitoringStatus" class="card" style="background: linear-gradient(135deg, #28a745, #20c997); color: white; text-align: center;">
+                        <h4>📱 Schedule Notifications</h4>
+                        <p id="monitoringStatusText">Click "Start Notifications" to receive 5-minute alerts before classes</p>
+                    </div>
+                ` : ''}
+                
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4>Week View</h4>
+                        <div>
+                            <button onclick="changeWeek(-1)" class="btn" style="width: auto; margin: 0 0.5rem;">← Previous Week</button>
+                            <span id="currentWeekDisplay">Current Week</span>
+                            <button onclick="changeWeek(1)" class="btn" style="width: auto; margin: 0 0.5rem;">Next Week →</button>
+                        </div>
+                    </div>
+                    <div id="scheduleGrid">
+                        ${renderScheduleGrid()}
+                    </div>
+                </div>
+                
+                <div class="card">
+                    <h4>📋 Detailed Schedule</h4>
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Teacher</th>
+                                <th>Date</th>
+                                <th>Time</th>
+                                <th>Room</th>
+                                ${isAdmin ? '<th>Actions</th>' : ''}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${renderScheduleTable()}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            
+            updateWeekDisplay();
+        }
+
+        function showStudentsContent(content) {
+            if (userType === 'admin') {
+                content.innerHTML = `
+                    <h2>👥 Students Management</h2>
+                    
+                    <div class="card">
+                        <h4>📊 Student List</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${studentsData.map(student => `
+                                    <tr>
+                                        <td>${student.name}</td>
+                                        <td>${student.email}</td>
+                                        <td>${student.grade}</td>
+                                        <td>
+                                            <button class="btn" style="width: auto; padding: 0.25rem 0.5rem;">View</button>
+                                            <button class="btn" style="width: auto; padding: 0.25rem 0.5rem; margin-left: 0.5rem;">Edit</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        function showTeachersContent(content) {
+            if (userType === 'admin') {
+                content.innerHTML = `
+                    <h2>👨‍🏫 Teachers Management</h2>
+                    
+                    <div class="card">
+                        <h4>📊 Teacher List</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Subject</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${teachersData.map(teacher => `
+                                    <tr>
+                                        <td>${teacher.name}</td>
+                                        <td>${teacher.subject}</td>
+                                        <td>
+                                            <button class="btn" style="width: auto; padding: 0.25rem 0.5rem;">View</button>
+                                            <button class="btn" style="width: auto; padding: 0.25rem 0.5rem; margin-left: 0.5rem;">Edit</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        function showClassesContent(content) {
+            if (userType === 'teacher') {
+                content.innerHTML = `
+                    <h2>👥 My Classes</h2>
+                    
+                    <div class="card">
+                        <h4>📚 Current Classes</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+                            ${scheduleData.map(cls => `
+                                <div class="card" style="margin: 0;">
+                                    <h5>${cls.className}</h5>
+                                    <p><strong>Room:</strong> ${cls.room}</p>
+                                    <p><strong>Time:</strong> ${cls.startTime} - ${cls.endTime}</p>
+                                    <p><strong>Students:</strong> ${cls.students ? cls.students.length : 0}</p>
+                                    <button class="btn" style="margin-top: 1rem;">View Details</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showHomeworkContent(content) {
+            if (userType === 'teacher') {
+                content.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                        <h2>📚 Assignment Management</h2>
+                        <button class="btn" onclick="createAssignment()">Create New Assignment</button>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>📝 My Assignments</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Title</th>
+                                    <th>Subject</th>
+                                    <th>Due Date</th>
+                                    <th>Submissions</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${homeworkData.map(hw => `
+                                    <tr>
+                                        <td>${hw.title}</td>
+                                        <td>${hw.subject}</td>
+                                        <td>${hw.dueDate}</td>
+                                        <td>${hw.submissions.length}/${hw.assignedTo.length}</td>
+                                        <td>
+                                            <button class="btn" style="width: auto; padding: 0.25rem 0.5rem;">View</button>
+                                            <button class="btn" style="width: auto; padding: 0.25rem 0.5rem; margin-left: 0.5rem;">Grade</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (userType === 'student') {
+                content.innerHTML = `
+                    <h2>📚 My Assignments</h2>
+                    
+                    <div class="card">
+                        <h4>📝 Current Assignments</h4>
+                        ${homeworkData.map(hw => `
+                            <div style="border: 1px solid #ddd; border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: start;">
+                                    <div>
+                                        <h5>${hw.title}</h5>
+                                        <p style="color: #666; margin: 0.5rem 0;">${hw.subject} - Due: ${hw.dueDate}</p>
+                                        <p>${hw.description}</p>
+                                    </div>
+                                    <button onclick="submitAssignment(${hw.id})" class="btn" style="width: auto;">Submit Work</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+        }
+
+        function showGradesContent(content) {
+            if (userType === 'teacher') {
+                content.innerHTML = `
+                    <h2>⭐ Grade Management</h2>
+                    
+                    <div class="card">
+                        <h4>📊 Student Grades</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Assignment</th>
+                                    <th>Grade</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>John Smith</td>
+                                    <td>Algebra Problem Set 5</td>
+                                    <td><input type="text" value="A" style="width: 60px; padding: 0.25rem; border: 1px solid #ddd; border-radius: 4px;"></td>
+                                    <td><button onclick="saveGrade(1)" class="btn" style="width: auto; padding: 0.25rem 0.5rem;">Save</button></td>
+                                </tr>
+                                <tr>
+                                    <td>Emma Johnson</td>
+                                    <td>Algebra Problem Set 5</td>
+                                    <td><input type="text" value="A-" style="width: 60px; padding: 0.25rem; border: 1px solid #ddd; border-radius: 4px;"></td>
+                                    <td><button onclick="saveGrade(2)" class="btn" style="width: auto; padding: 0.25rem 0.5rem;">Save</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } else if (userType === 'student') {
+                content.innerHTML = `
+                    <h2>⭐ My Grades</h2>
+                    
+                    <div class="card">
+                        <h4>📊 Current Grades</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Grade</th>
+                                    <th>Score</th>
+                                    <th>Teacher</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Mathematics</td>
+                                    <td><span style="color: #28a745; font-weight: bold;">A</span></td>
+                                    <td>95%</td>
+                                    <td>Dr. Sarah Wilson</td>
+                                </tr>
+                                <tr>
+                                    <td>Science Lab</td>
+                                    <td><span style="color: #28a745; font-weight: bold;">A-</span></td>
+                                    <td>92%</td>
+                                    <td>Prof. David Lee</td>
+                                </tr>
+                                <tr>
+                                    <td>English Literature</td>
+                                    <td><span style="color: #007bff; font-weight: bold;">B+</span></td>
+                                    <td>87%</td>
+                                    <td>Ms. Lisa Garcia</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        function showAttendanceContent(content) {
+            if (userType === 'teacher') {
+                content.innerHTML = `
+                    <h2>📅 Attendance Management</h2>
+                    
+                    <div class="card">
+                        <h4>✅ Mark Attendance</h4>
+                        <div style="margin-bottom: 1rem;">
+                            <label>Select Class:</label>
+                            <select class="form-control" style="width: auto; display: inline-block; margin-left: 1rem;">
+                                <option>Mathematics - Room 101</option>
+                                <option>Science Lab - Lab 1</option>
+                            </select>
+                            <label style="margin-left: 2rem;">Date:</label>
+                            <input type="date" class="form-control" style="width: auto; display: inline-block; margin-left: 1rem;" value="${formatDate(new Date())}">
+                        </div>
+                        
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${studentsData.map(student => `
+                                    <tr>
+                                        <td>${student.name}</td>
+                                        <td>
+                                            <select style="padding: 0.25rem;">
+                                                <option value="present">Present</option>
+                                                <option value="absent">Absent</option>
+                                                <option value="late">Late</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" placeholder="Notes..." style="width: 100%; padding: 0.25rem;">
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        
+                        <button class="btn" onclick="saveAttendance()">Save Attendance</button>
+                    </div>
+                `;
+            }
+        }
+
+        function showSubmissionsContent(content) {
+            if (userType === 'student') {
+                content.innerHTML = `
+                    <h2>📤 Submit Assignments</h2>
+                    
+                    <div class="card">
+                        <h4>📝 Pending Submissions</h4>
+                        ${homeworkData.map(hw => `
+                            <div style="border: 1px solid #ffc107; border-radius: 8px; padding: 1rem; margin-bottom: 1rem; background: #fff3cd;">
+                                <h5>${hw.title}</h5>
+                                <p>${hw.subject} - Due: ${hw.dueDate}</p>
+                                <div style="margin-top: 1rem;">
+                                    <input type="file" style="margin-bottom: 0.5rem;" accept=".pdf,.doc,.docx,.txt">
+                                    <textarea placeholder="Add comments or notes..." style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px;" rows="3"></textarea>
+                                    <button onclick="submitWork(${hw.id})" class="btn" style="margin-top: 0.5rem; width: auto;">Submit Assignment</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="card">
+                        <h4>✅ Submitted Work</h4>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Assignment</th>
+                                    <th>Subject</th>
+                                    <th>Submitted Date</th>
+                                    <th>Status</th>
+                                    <th>Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Math Quiz 3</td>
+                                    <td>Mathematics</td>
+                                    <td>2025-06-08</td>
+                                    <td><span style="color: #28a745;">Graded</span></td>
+                                    <td>A-</td>
+                                </tr>
+                                <tr>
+                                    <td>Science Lab Report</td>
+                                    <td>Science</td>
+                                    <td>2025-06-07</td>
+                                    <td><span style="color: #ffc107;">Pending Review</span></td>
+                                    <td>-</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            }
+        }
+
+        function showProgressContent(content) {
+            if (userType === 'student') {
+                content.innerHTML = `
+                    <h2>📈 My Progress</h2>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                        <div class="card">
+                            <h4>📊 Grade Overview</h4>
+                            <div style="margin: 1rem 0;">
+                                <div style="margin-bottom: 0.5rem;">Mathematics: <strong style="color: #28a745;">A</strong></div>
+                                <div style="margin-bottom: 0.5rem;">Science: <strong style="color: #28a745;">A-</strong></div>
+                                <div style="margin-bottom: 0.5rem;">English: <strong style="color: #007bff;">B+</strong></div>
+                            </div>
+                            <div style="text-align: center; margin-top: 1rem;">
+                                <h3>Overall GPA: <span style="color: #28a745;">3.8</span></h3>
+                            </div>
+                        </div>
+                        
+                        <div class="card">
+                            <h4>📅 Attendance</h4>
+                            <div style="text-align: center; margin: 1rem 0;">
+                                <div style="font-size: 2rem; color: #28a745; margin-bottom: 0.5rem;">95%</div>
+                                <div>Overall Attendance Rate</div>
+                                <div style="margin-top: 1rem; font-size: 0.9rem;">
+                                    <div>Present: 142 days</div>
+                                    <div>Absent: 7 days</div>
+                                    <div>Late: 3 times</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="card">
+                        <h4>🎯 Recent Achievements</h4>
+                        <div style="margin: 1rem 0;">
+                            <div style="padding: 0.5rem; background: #e8f5e8; border-radius: 5px; margin-bottom: 0.5rem;">
+                                🏆 Perfect Attendance - Week of June 3rd
+                            </div>
+                            <div style="padding: 0.5rem; background: #e8f5e8; border-radius: 5px; margin-bottom: 0.5rem;">
+                                ⭐ Excellent Math Quiz Performance - 98%
+                            </div>
+                            <div style="padding: 0.5rem; background: #e8f5e8; border-radius: 5px; margin-bottom: 0.5rem;">
+                                📚 Submitted all assignments on time this month
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showReportsContent(content) {
+            if (userType === 'admin') {
+                content.innerHTML = `
+                    <h2>📊 Reports & Analytics</h2>
+                    
+                    <div class="card">
+                        <h4>📈 School Statistics</h4>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                            <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                                <h3 style="color: #28a745;">95.2%</h3>
+                                <p>Average Attendance</p>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                                <h3 style="color: #007bff;">3.6</h3>
+                                <p>Average GPA</p>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                                <h3 style="color: #ffc107;">12</h3>
+                                <p>Active Classes</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        function showSettingsContent(content) {
+            if (userType === 'admin') {
+                content.innerHTML = `
+                    <h2>⚙️ System Settings</h2>
+                    
+                    <div class="card">
+                        <h4>🏫 School Information</h4>
+                        <div class="form-group">
+                            <label>School Name</label>
+                            <input type="text" class="form-control" value="Demo High School">
+                        </div>
+                        <div class="form-group">
+                            <label>School Address</label>
+                            <textarea class="form-control" rows="3">123 Education Street, Learning City, LC 12345</textarea>
+                        </div>
+                        <button class="btn">Save Settings</button>
+                    </div>
+                `;
+            }
+        }
+
+        // Schedule Functions
+        function renderScheduleGrid() {
+            const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const weekStart = getWeekStart(currentWeek);
+            
+            let gridHTML = '<div class="schedule-grid">';
+            
+            for (let i = 0; i < 7; i++) {
+                const currentDate = new Date(weekStart);
+                currentDate.setDate(weekStart.getDate() + i);
+                const dateStr = formatDate(currentDate);
+                
+                const dayClasses = getFilteredSchedule().filter(cls => cls.date === dateStr);
+                
+                gridHTML += `
+                    <div class="schedule-day">
+                        <div class="schedule-day-header">
+                            ${weekDays[i]}<br>
+                            <small>${currentDate.getDate()}</small>
+                        </div>
+                        ${dayClasses.map(cls => `
+                            <div class="schedule-event" onclick="viewClass(${cls.id})">
+                                <strong>${cls.className}</strong><br>
+                                ${cls.startTime} - ${cls.endTime}<br>
+                                <small>${cls.room}</small>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            gridHTML += '</div>';
+            return gridHTML;
+        }
+
+        function renderScheduleTable() {
+            const filteredSchedule = getFilteredSchedule();
+            const isAdmin = userType === 'admin';
+            
+            return filteredSchedule.map(cls => `
+                <tr>
+                    <td>${cls.className}</td>
+                    <td>${cls.teacher}</td>
+                    <td>${cls.date}</td>
+                    <td>${cls.startTime} - ${cls.endTime}</td>
+                    <td>${cls.room}</td>
+                    ${isAdmin ? `
+                        <td>
+                            <button onclick="editClass(${cls.id})" class="btn" style="width: auto; padding: 0.25rem 0.5rem; margin-right: 0.5rem;">Edit</button>
+                            <button onclick="deleteClass(${cls.id})" class="btn" style="width: auto; padding: 0.25rem 0.5rem; background: #dc3545;">Delete</button>
+                        </td>
+                    ` : ''}
+                </tr>
+            `).join('');
+        }
+
+        function getFilteredSchedule() {
+            if (userType === 'admin') {
+                return scheduleData;
+            } else if (userType === 'teacher') {
+                return scheduleData.filter(cls => cls.teacher.includes('Wilson')); // Demo
+            } else if (userType === 'student') {
+                return scheduleData.filter(cls => cls.students && cls.students.includes('john.smith')); // Demo
+            }
+            return scheduleData;
+        }
+
+        // Schedule Monitoring Functions
+        function toggleScheduleMonitoring() {
+            if (isMonitoring) {
+                stopScheduleMonitoring();
+            } else {
+                startScheduleMonitoring();
+            }
+        }
+
+        function startScheduleMonitoring() {
+            if (userType === 'admin') return;
+            
+            isMonitoring = true;
+            
+            const btn = document.getElementById('scheduleMonitorBtn');
+            if (btn) {
+                btn.textContent = '⏹️ Stop Notifications';
+                btn.classList.add('active');
+            }
+            
+            const statusText = document.getElementById('monitoringStatusText');
+            if (statusText) {
+                statusText.textContent = '🟢 Notifications Active - You\'ll receive 5-minute alerts before classes';
+            }
+            
+            if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+            
+            setupClassNotifications();
+            showNotification('🚀 Schedule notifications activated! You\'ll receive 5-minute warnings before classes.', 'success');
+        }
+
+        function stopScheduleMonitoring() {
+            isMonitoring = false;
+            
+            notificationTimers.forEach(timer => clearTimeout(timer));
+            notificationTimers = [];
+            
+            const btn = document.getElementById('scheduleMonitorBtn');
+            if (btn) {
+                btn.textContent = '🚀 Start Notifications';
+                btn.classList.remove('active');
+            }
+            
+            const statusText = document.getElementById('monitoringStatusText');
+            if (statusText) {
+                statusText.textContent = 'Click "Start Notifications" to receive 5-minute alerts before classes';
+            }
+            
+            showNotification('⏹️ Schedule notifications stopped', 'warning');
+        }
+
+        function setupClassNotifications() {
+            const today = new Date();
+            const todayStr = formatDate(today);
+            const userClasses = getFilteredSchedule().filter(cls => cls.date === todayStr);
+            
+            userClasses.forEach(cls => {
+                const [hours, minutes] = cls.startTime.split(':');
+                const classTime = new Date();
+                classTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+                
+                const notificationTime = new Date(classTime.getTime() - 5 * 60 * 1000);
+                const timeUntilNotification = notificationTime.getTime() - today.getTime();
+                
+                if (timeUntilNotification > 0) {
+                    const timer = setTimeout(() => {
+                        triggerClassNotification(cls);
+                    }, timeUntilNotification);
+                    
+                    notificationTimers.push(timer);
+                }
+            });
+        }
+
+        function triggerClassNotification(cls) {
+            showNotification(`⏰ CLASS STARTING SOON!\n${cls.className}\n📍 ${cls.room}\n⏰ ${cls.startTime}`, 'warning');
+            
+            if (Notification.permission === 'granted') {
+                new Notification('ClassCompass - Class Starting Soon!', {
+                    body: `${cls.className} in ${cls.room} at ${cls.startTime}`,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🎓</text></svg>',
+                    requireInteraction: true
+                });
+            }
+        }
+
+        // Utility Functions
+        function formatDate(date) {
+            return date.toISOString().split('T')[0];
+        }
+
+        function addDays(date, days) {
+            const result = new Date(date);
+            result.setDate(result.getDate() + days);
+            return result;
+        }
+
+        function getWeekStart(weekOffset = 0) {
+            const today = new Date();
+            const weekStart = new Date(today);
+            weekStart.setDate(today.getDate() - today.getDay() + (weekOffset * 7));
+            return weekStart;
+        }
+
+        function updateWeekDisplay() {
+            const weekDisplay = document.getElementById('currentWeekDisplay');
+            if (weekDisplay) {
+                if (currentWeek === 0) {
+                    weekDisplay.textContent = 'Current Week';
+                } else if (currentWeek === 1) {
+                    weekDisplay.textContent = 'Next Week';
+                } else if (currentWeek === -1) {
+                    weekDisplay.textContent = 'Previous Week';
+                } else if (currentWeek > 1) {
+                    weekDisplay.textContent = `${currentWeek} Weeks Ahead`;
+                } else {
+                    weekDisplay.textContent = `${Math.abs(currentWeek)} Weeks Ago`;
+                }
+            }
+        }
+
+        function changeWeek(direction) {
+            currentWeek += direction;
+            updateWeekDisplay();
+            
+            const scheduleGrid = document.getElementById('scheduleGrid');
+            if (scheduleGrid) {
+                scheduleGrid.innerHTML = renderScheduleGrid();
+            }
+            
+            showSection('schedule');
+        }
+
+        // Helper Functions
+        function getTodayClasses() {
+            const today = formatDate(new Date());
+            return scheduleData.filter(cls => cls.date === today);
+        }
+
+        function renderUpcomingAssignments() {
+            if (homeworkData.length === 0) {
+                return '<p>No upcoming assignments</p>';
+            }
+            
+            return homeworkData.slice(0, 3).map(hw => `
+                <div style="border-left: 3px solid #667eea; padding-left: 1rem; margin-bottom: 1rem;">
+                    <strong>${hw.title}</strong><br>
+                    <span style="color: #666;">${hw.subject} - Due: ${hw.dueDate}</span><br>
+                    <small>${hw.description}</small>
+                </div>
+            `).join('');
+        }
+
+        // Modal Functions
+        function showScheduleModal() {
+            if (userType !== 'admin') return;
+            document.getElementById('scheduleModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        function handleScheduleSubmit(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const newClass = {
+                id: scheduleData.length + 1,
+                className: formData.get('className'),
+                teacher: formData.get('teacher'),
+                date: formData.get('date'),
+                startTime: formData.get('startTime'),
+                endTime: formData.get('endTime'),
+                room: formData.get('room'),
+                students: []
+            };
+            
+            scheduleData.push(newClass);
+            showNotification('Class scheduled successfully!', 'success');
+            closeModal('scheduleModal');
+            
+            if (currentSection === 'schedule') {
+                showSection('schedule');
+            }
+        }
+
+        // Action Functions
+        function createAssignment() {
+            showNotification('Assignment creation feature would open here', 'info');
+        }
+
+        function submitAssignment(id) {
+            showNotification('Assignment submission feature would open here', 'info');
+        }
+
+        function submitWork(id) {
+            showNotification('Work submitted successfully!', 'success');
+        }
+
+        function viewClass(id) {
+            const cls = scheduleData.find(c => c.id === id);
+            if (cls) {
+                showNotification(`Viewing details for ${cls.className}`, 'info');
+            }
+        }
+
+        function editClass(id) {
+            if (userType !== 'admin') return;
+            showNotification('Edit class feature would open here', 'info');
+        }
+
+        function deleteClass(id) {
+            if (userType !== 'admin') return;
+            if (confirm('Are you sure you want to delete this class?')) {
+                scheduleData = scheduleData.filter(c => c.id !== id);
+                showNotification('Class deleted successfully', 'success');
+                if (currentSection === 'schedule') {
+                    showSection('schedule');
+                }
+            }
+        }
+
+        function saveAttendance() {
+            showNotification('Attendance saved successfully!', 'success');
+        }
+
+        function saveGrade(studentId) {
+            showNotification('Grade saved successfully!', 'success');
+        }
+
+        // Notification System
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = message.replace(/\n/g, '<br>');
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 4000);
+        }
+
+        // Logout Function
+        function logout() {
+            currentUser = null;
+            userType = null;
+            currentScreen = 'welcome';
+            isMonitoring = false;
+            
+            notificationTimers.forEach(timer => clearTimeout(timer));
+            notificationTimers = [];
+            
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            
+            showNotification('Logged out successfully', 'info');
+        }
+
+        console.log('🎓 ClassCompass Complete School Management System Ready!');
+    </script>
+</body>
+</html>
+                Section('schedule')">
+                            <i class="fas fa-calendar-alt"></i> Schedule Management
+                        </button>
+                        <button class="sidebar-item" onclick="showSection('students')">
+                            <i class="fas fa-user-graduate"></i> Students
+                        </button>
+                        <button class="sidebar-item" onclick="show

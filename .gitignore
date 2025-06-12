@@ -1,0 +1,28 @@
+# Build results
+[Dd]ebug/
+[Rr]elease/
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+*.log
+
+# Large deployment files
+*.zip
+*.apk
+*.aab
+build_log.txt
+*-Deployment-*/
+app_source_bundle.*
+
+# Backup files
+*.backup
+*.backup.*
+*.beforefix
+*.original
+
+# Package files
+packages/
+node_modules/

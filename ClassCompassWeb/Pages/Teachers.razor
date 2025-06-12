@@ -1,0 +1,81 @@
+﻿@page "/teachers"
+@using ClassCompassWeb.Models
+@using ClassCompassWeb.Services
+@inject TeacherService TeacherService
+
+<PageTitle>Teachers - ClassCompass</PageTitle>
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">
+                <span class="oi oi-person" aria-hidden="true"></span>
+                Teachers
+            </h1>
+            
+            @if (teachers == null)
+            {
+                <div class="d-flex justify-content-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            }
+            else if (!teachers.Any())
+            {
+                <div class="alert alert-info">
+                    <h4>No Teachers Found</h4>
+                    <p>There are currently no teachers in the system.</p>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var teacher in teachers)
+                    {
+                        <div class="col-md-6 col-lg-4 mb-3">
+                            <div class="card h-100">
+                                <div class="card-body">
+                                    <h5 class="card-title">@teacher.FullName</h5>
+                                    <p class="card-text">
+                                        <strong>Email:</strong> @teacher.Email<br>
+                                        <strong>Subject:</strong> @teacher.Subject<br>
+                                        <strong>User ID:</strong> @teacher.UserId
+                                    </p>
+                                    @if (teacher.User != null)
+                                    {
+                                        <small class="text-muted">
+                                            Username: @teacher.User.Username
+                                        </small>
+                                    }
+                                </div>
+                                <div class="card-footer">
+                                    <small class="text-muted">
+                                        Created: @teacher.CreatedAt.ToString("MMM dd, yyyy")
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Teacher>? teachers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            teachers = await TeacherService.GetTeachersAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading teachers: {ex.Message}");
+            teachers = new List<Teacher>();
+        }
+    }
+}

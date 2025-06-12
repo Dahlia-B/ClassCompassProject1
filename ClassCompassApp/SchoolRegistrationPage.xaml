@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage x:Class="ClassCompass.SchoolRegistrationPage"
+             xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             Title="School Registration">
+    
+    <ScrollView>
+        <VerticalStackLayout Spacing="25" Padding="30,0" VerticalOptions="Center">
+            
+            <Label 
+                Text="Register Your School"
+                FontSize="28"
+                HorizontalOptions="Center"
+                TextColor="#1976D2"
+                FontAttributes="Bold" />
+
+            <Frame BackgroundColor="LightGray" Padding="20">
+                <VerticalStackLayout Spacing="15">
+                    
+                    <Label Text="School Name" FontSize="16" FontAttributes="Bold" />
+                    <Entry 
+                        x:Name="SchoolNameEntry"
+                        Placeholder="Enter school name"
+                        FontSize="16" />
+
+                    <Label Text="Number of Classes" FontSize="16" FontAttributes="Bold" />
+                    <Entry 
+                        x:Name="ClassCountEntry"
+                        Placeholder="Enter number of classes"
+                        Keyboard="Numeric"
+                        FontSize="16" />
+
+                    <Label Text="Description" FontSize="16" FontAttributes="Bold" />
+                    <Entry 
+                        x:Name="DescriptionEntry"
+                        Placeholder="Enter school description"
+                        FontSize="16" />
+
+                </VerticalStackLayout>
+            </Frame>
+
+            <Button 
+                x:Name="RegisterButton"
+                Text="?? Register School"
+                Clicked="OnRegisterClicked"
+                BackgroundColor="#4CAF50"
+                TextColor="White"
+                FontSize="18"
+                Margin="0,20,0,0" />
+
+            <Button 
+                Text="?? Back"
+                Clicked="OnBackClicked"
+                BackgroundColor="Gray"
+                TextColor="White"
+                FontSize="16" />
+
+        </VerticalStackLayout>
+    </ScrollView>
+    
+</ContentPage>

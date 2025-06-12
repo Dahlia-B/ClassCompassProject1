@@ -1,0 +1,320 @@
+﻿@page "/students"
+@using ClassCompassWeb.Services.Api
+@using ClassCompassWeb.Services.Socket
+@inject IApiService ApiService
+@inject ISocketService SocketService
+
+<PageTitle>Students - ClassCompass</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2>👨‍🎓 Student Management</h2>
+            <p class="text-muted">Manage student information and records</p>
+        </div>
+        <button class="btn btn-primary" @onclick="AddNewStudent">
+            ➕ Add New Student
+        </button>
+    </div>
+
+    <!-- Search and Filter -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <input type="text" class="form-control" placeholder="🔍 Search students..." @bind="searchTerm" @oninput="FilterStudents" />
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" @bind="selectedGrade" @onchange="FilterStudents">
+                        <option value="">All Grades</option>
+                        <option value="9">Grade 9</option>
+                        <option value="10">Grade 10</option>
+                        <option value="11">Grade 11</option>
+                        <option value="12">Grade 12</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button class="btn btn-outline-primary w-100" @onclick="RefreshStudents">
+                        🔄 Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Students Table -->
+    <div class="card">
+        <div class="card-header">
+            <h5>📋 Student List (@filteredStudents.Count students)</h5>
+        </div>
+        <div class="card-body">
+            @if (isLoading)
+            {
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p>Loading students...</p>
+                </div>
+            }
+            else if (filteredStudents.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Grade</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var student in filteredStudents)
+                            {
+                                <tr>
+                                    <td>@student.Id</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center text-white me-2">
+                                                @student.Name.Substring(0, 1).ToUpper()
+                                            </div>
+                                            @student.Name
+                                        </div>
+                                    </td>
+                                    <td><span class="badge bg-info">Grade @student.Grade</span></td>
+                                    <td>@student.Email</td>
+                                    <td>
+                                        <span class="badge @(student.IsActive ? "bg-success" : "bg-secondary")">
+                                            @(student.IsActive ? "Active" : "Inactive")
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <button class="btn btn-sm btn-outline-primary" @onclick="() => ViewStudent(student.Id)">
+                                                👁️ View
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-success" @onclick="() => EditStudent(student.Id)">
+                                                ✏️ Edit
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-info" @onclick="() => NotifyStudent(student.Id)">
+                                                📧 Notify
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <h5>No students found</h5>
+                    <p class="text-muted">Try adjusting your search criteria or add a new student.</p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Student Modal -->
+@if (showModal)
+{
+    <div class="modal fade show" style="display: block;" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">@(editingStudent?.Id > 0 ? "Edit Student" : "Add New Student")</h5>
+                    <button type="button" class="btn-close" @onclick="CloseModal"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label class="form-label">Name</label>
+                            <input type="text" class="form-control" @bind="editingStudent.Name" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Email</label>
+                            <input type="email" class="form-control" @bind="editingStudent.Email" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Grade</label>
+                            <select class="form-select" @bind="editingStudent.Grade">
+                                <option value="9">Grade 9</option>
+                                <option value="10">Grade 10</option>
+                                <option value="11">Grade 11</option>
+                                <option value="12">Grade 12</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" @bind="editingStudent.IsActive" />
+                                <label class="form-check-label">Active Student</label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" @onclick="CloseModal">Cancel</button>
+                    <button type="button" class="btn btn-primary" @onclick="SaveStudent">
+                        @(editingStudent?.Id > 0 ? "Update" : "Create") Student
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+}
+
+@code {
+    private List<Student> students = new();
+    private List<Student> filteredStudents = new();
+    private bool isLoading = true;
+    private string searchTerm = "";
+    private string selectedGrade = "";
+    private bool showModal = false;
+    private Student editingStudent = new();
+
+    public class Student
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = "";
+        public string Email { get; set; } = "";
+        public int Grade { get; set; } = 9;
+        public bool IsActive { get; set; } = true;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadStudents();
+    }
+
+    private async Task LoadStudents()
+    {
+        isLoading = true;
+        try
+        {
+            // TODO: Replace with actual API call
+            // var response = await ApiService.GetAsync<List<Student>>("api/students");
+            
+            // Sample data for now
+            students = new List<Student>
+            {
+                new Student { Id = 1, Name = "John Smith", Email = "john.smith@school.edu", Grade = 10, IsActive = true },
+                new Student { Id = 2, Name = "Sarah Johnson", Email = "sarah.johnson@school.edu", Grade = 11, IsActive = true },
+                new Student { Id = 3, Name = "Mike Davis", Email = "mike.davis@school.edu", Grade = 9, IsActive = true },
+                new Student { Id = 4, Name = "Emily Brown", Email = "emily.brown@school.edu", Grade = 12, IsActive = false },
+                new Student { Id = 5, Name = "Alex Wilson", Email = "alex.wilson@school.edu", Grade = 10, IsActive = true }
+            };
+            
+            filteredStudents = students.ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading students: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void FilterStudents()
+    {
+        filteredStudents = students.Where(s =>
+            (string.IsNullOrEmpty(searchTerm) || s.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || s.Email.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+            (string.IsNullOrEmpty(selectedGrade) || s.Grade.ToString() == selectedGrade)
+        ).ToList();
+        
+        StateHasChanged();
+    }
+
+    private async Task RefreshStudents()
+    {
+        await LoadStudents();
+    }
+
+    private void AddNewStudent()
+    {
+        editingStudent = new Student();
+        showModal = true;
+    }
+
+    private void ViewStudent(int studentId)
+    {
+        // TODO: Navigate to student detail page
+        Console.WriteLine($"Viewing student {studentId}");
+    }
+
+    private void EditStudent(int studentId)
+    {
+        editingStudent = students.FirstOrDefault(s => s.Id == studentId) ?? new Student();
+        showModal = true;
+    }
+
+    private async Task NotifyStudent(int studentId)
+    {
+        try
+        {
+            var student = students.FirstOrDefault(s => s.Id == studentId);
+            if (student != null)
+            {
+                await SocketService.SendToStudentAsync(studentId.ToString(), $"Hello {student.Name}! You have a new notification from ClassCompass.");
+                Console.WriteLine($"Notification sent to {student.Name}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending notification: {ex.Message}");
+        }
+    }
+
+    private async Task SaveStudent()
+    {
+        try
+        {
+            if (editingStudent.Id > 0)
+            {
+                // TODO: Update existing student via API
+                var existingIndex = students.FindIndex(s => s.Id == editingStudent.Id);
+                if (existingIndex >= 0)
+                {
+                    students[existingIndex] = editingStudent;
+                }
+            }
+            else
+            {
+                // TODO: Create new student via API
+                editingStudent.Id = students.Max(s => s.Id) + 1;
+                students.Add(editingStudent);
+            }
+            
+            FilterStudents();
+            CloseModal();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error saving student: {ex.Message}");
+        }
+    }
+
+    private void CloseModal()
+    {
+        showModal = false;
+        editingStudent = new Student();
+    }
+}
+
+<style>
+    .avatar-sm {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+</style>

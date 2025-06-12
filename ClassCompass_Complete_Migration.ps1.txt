@@ -1,0 +1,866 @@
+# ClassCompass Complete Web Migration Script
+# Save this as: ClassCompass_Complete_Migration.ps1
+# Run from: C:\ClassCompassProject
+# Usage: .\ClassCompass_Complete_Migration.ps1
+
+param(
+    [string]$ApiPort = "5004",
+    [string]$WebPort = "7000"
+)
+
+Write-Host "🚀 ClassCompass Complete Web Migration & Fix" -ForegroundColor Cyan
+Write-Host "=" * 60 -ForegroundColor Gray
+
+# Ensure we're in the right directory
+if (!(Test-Path "ClassCompassWeb")) {
+    Write-Host "❌ ClassCompassWeb directory not found!" -ForegroundColor Red
+    Write-Host "Please run this script from C:\ClassCompassProject" -ForegroundColor Yellow
+    exit 1
+}
+
+# Phase 1: Fix Package Compatibility
+Write-Host "`n🔧 Phase 1: Fixing Package Compatibility..." -ForegroundColor Yellow
+Set-Location "ClassCompassWeb"
+
+# Create fixed .csproj file
+$csprojContent = @'
+<Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly" Version="8.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.DevServer" Version="8.0.11" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.11" />
+    <PackageReference Include="Microsoft.Extensions.Http" Version="8.0.1" />
+    <PackageReference Include="System.Net.Http.Json" Version="8.0.1" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Authorization" Version="8.0.11" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ClassCompass.Shared\ClassCompass.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ServiceWorker Include="wwwroot\service-worker.js" PublishedContent="wwwroot\service-worker.published.js" />
+  </ItemGroup>
+</Project>
+'@
+
+Set-Content -Path "ClassCompassWeb.csproj" -Value $csprojContent -Encoding UTF8
+Write-Host "   ✅ Fixed package compatibility" -ForegroundColor Green
+
+# Phase 2: Update Program.cs
+Write-Host "`n🔧 Phase 2: Configuring Services..." -ForegroundColor Yellow
+
+$programContent = @"
+using Microsoft.AspNetCore.Components.Web;
+using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using ClassCompassWeb;
+using ClassCompassWeb.Services;
+using Microsoft.AspNetCore.SignalR.Client;
+using Blazored.LocalStorage;
+
+var builder = WebAssemblyHostBuilder.CreateDefault(args);
+builder.RootComponents.Add<App>("#app");
+builder.RootComponents.Add<HeadOutlet>("head::after");
+
+// Configure HTTP Client
+builder.Services.AddScoped(sp => new HttpClient 
+{ 
+    BaseAddress = new Uri("http://localhost:$ApiPort/") 
+});
+
+// Configure SignalR
+builder.Services.AddSingleton<HubConnection>(sp =>
+{
+    return new HubConnectionBuilder()
+        .WithUrl("http://localhost:$ApiPort/socketHub")
+        .Build();
+});
+
+// Add services
+builder.Services.AddScoped<IApiService, ApiService>();
+builder.Services.AddScoped<ISocketService, SocketService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
+
+// Add local storage and authorization
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddAuthorizationCore();
+
+await builder.Build().RunAsync();
+"@
+
+Set-Content -Path "Program.cs" -Value $programContent -Encoding UTF8
+Write-Host "   ✅ Configured services" -ForegroundColor Green
+
+# Phase 3: Create Services
+Write-Host "`n🔧 Phase 3: Creating Services..." -ForegroundColor Yellow
+New-Item -ItemType Directory -Path "Services" -Force | Out-Null
+
+# API Service
+$apiServiceContent = @'
+using System.Net.Http.Json;
+using System.Text.Json;
+
+namespace ClassCompassWeb.Services
+{
+    public interface IApiService
+    {
+        Task<T?> GetAsync<T>(string endpoint);
+        Task<T?> PostAsync<T>(string endpoint, object data);
+        Task<T?> PutAsync<T>(string endpoint, object data);
+        Task<bool> DeleteAsync(string endpoint);
+    }
+
+    public class ApiService : IApiService
+    {
+        private readonly HttpClient _httpClient;
+        private readonly JsonSerializerOptions _jsonOptions;
+
+        public ApiService(HttpClient httpClient)
+        {
+            _httpClient = httpClient;
+            _jsonOptions = new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+            };
+        }
+
+        public async Task<T?> GetAsync<T>(string endpoint)
+        {
+            try
+            {
+                return await _httpClient.GetFromJsonAsync<T>(endpoint, _jsonOptions);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        public async Task<T?> PostAsync<T>(string endpoint, object data)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(endpoint, data, _jsonOptions);
+                return await response.Content.ReadFromJsonAsync<T>(_jsonOptions);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        public async Task<T?> PutAsync<T>(string endpoint, object data)
+        {
+            try
+            {
+                var response = await _httpClient.PutAsJsonAsync(endpoint, data, _jsonOptions);
+                return await response.Content.ReadFromJsonAsync<T>(_jsonOptions);
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        public async Task<bool> DeleteAsync(string endpoint)
+        {
+            try
+            {
+                var response = await _httpClient.DeleteAsync(endpoint);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}
+'@
+
+Set-Content -Path "Services\ApiService.cs" -Value $apiServiceContent -Encoding UTF8
+
+# Socket Service
+$socketServiceContent = @'
+using Microsoft.AspNetCore.SignalR.Client;
+
+namespace ClassCompassWeb.Services
+{
+    public interface ISocketService
+    {
+        Task StartConnectionAsync();
+        Task StopConnectionAsync();
+        Task SendMessageAsync(string method, object data);
+        void OnReceiveMessage(string method, Action<object> handler);
+        bool IsConnected { get; }
+        event Action<string>? ConnectionStateChanged;
+    }
+
+    public class SocketService : ISocketService, IAsyncDisposable
+    {
+        private readonly HubConnection _hubConnection;
+
+        public SocketService(HubConnection hubConnection)
+        {
+            _hubConnection = hubConnection;
+        }
+
+        public bool IsConnected => _hubConnection.State == HubConnectionState.Connected;
+        public event Action<string>? ConnectionStateChanged;
+
+        public async Task StartConnectionAsync()
+        {
+            try
+            {
+                await _hubConnection.StartAsync();
+                ConnectionStateChanged?.Invoke("Connected");
+            }
+            catch (Exception ex)
+            {
+                ConnectionStateChanged?.Invoke($"Connection failed: {ex.Message}");
+            }
+        }
+
+        public async Task StopConnectionAsync()
+        {
+            try
+            {
+                await _hubConnection.StopAsync();
+                ConnectionStateChanged?.Invoke("Disconnected");
+            }
+            catch
+            {
+                // Ignore errors on disconnect
+            }
+        }
+
+        public async Task SendMessageAsync(string method, object data)
+        {
+            if (IsConnected)
+            {
+                await _hubConnection.SendAsync(method, data);
+            }
+        }
+
+        public void OnReceiveMessage(string method, Action<object> handler)
+        {
+            _hubConnection.On<object>(method, handler);
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await StopConnectionAsync();
+            await _hubConnection.DisposeAsync();
+        }
+    }
+}
+'@
+
+Set-Content -Path "Services\SocketService.cs" -Value $socketServiceContent -Encoding UTF8
+
+# Student Service
+$studentServiceContent = @'
+using ClassCompass.Shared.Models;
+
+namespace ClassCompassWeb.Services
+{
+    public interface IStudentService
+    {
+        Task<List<Student>> GetAllStudentsAsync();
+        Task<Student?> GetStudentByIdAsync(int id);
+        Task<Student?> CreateStudentAsync(Student student);
+        Task<Student?> UpdateStudentAsync(Student student);
+        Task<bool> DeleteStudentAsync(int id);
+        Task<List<Student>> SearchStudentsAsync(string searchTerm);
+    }
+
+    public class StudentService : IStudentService
+    {
+        private readonly IApiService _apiService;
+
+        public StudentService(IApiService apiService)
+        {
+            _apiService = apiService;
+        }
+
+        public async Task<List<Student>> GetAllStudentsAsync()
+        {
+            var result = await _apiService.GetAsync<List<Student>>("api/students");
+            return result ?? GetMockStudents();
+        }
+
+        public async Task<Student?> GetStudentByIdAsync(int id)
+        {
+            return await _apiService.GetAsync<Student>($"api/students/{id}");
+        }
+
+        public async Task<Student?> CreateStudentAsync(Student student)
+        {
+            return await _apiService.PostAsync<Student>("api/students", student);
+        }
+
+        public async Task<Student?> UpdateStudentAsync(Student student)
+        {
+            return await _apiService.PutAsync<Student>($"api/students/{student.Id}", student);
+        }
+
+        public async Task<bool> DeleteStudentAsync(int id)
+        {
+            return await _apiService.DeleteAsync($"api/students/{id}");
+        }
+
+        public async Task<List<Student>> SearchStudentsAsync(string searchTerm)
+        {
+            var result = await _apiService.GetAsync<List<Student>>($"api/students/search?term={searchTerm}");
+            return result ?? new List<Student>();
+        }
+
+        private List<Student> GetMockStudents()
+        {
+            return new List<Student>
+            {
+                new() { Id = 1, FirstName = "John", LastName = "Smith", Email = "john.smith@school.edu", StudentId = "STU001", Grade = 10 },
+                new() { Id = 2, FirstName = "Emma", LastName = "Johnson", Email = "emma.johnson@school.edu", StudentId = "STU002", Grade = 11 },
+                new() { Id = 3, FirstName = "Michael", LastName = "Brown", Email = "michael.brown@school.edu", StudentId = "STU003", Grade = 9 },
+                new() { Id = 4, FirstName = "Sarah", LastName = "Davis", Email = "sarah.davis@school.edu", StudentId = "STU004", Grade = 12 },
+                new() { Id = 5, FirstName = "David", LastName = "Wilson", Email = "david.wilson@school.edu", StudentId = "STU005", Grade = 10 }
+            };
+        }
+    }
+}
+'@
+
+Set-Content -Path "Services\StudentService.cs" -Value $studentServiceContent -Encoding UTF8
+
+# Teacher Service
+$teacherServiceContent = @'
+using ClassCompass.Shared.Models;
+
+namespace ClassCompassWeb.Services
+{
+    public interface ITeacherService
+    {
+        Task<List<Teacher>> GetAllTeachersAsync();
+        Task<Teacher?> GetTeacherByIdAsync(int id);
+        Task<Teacher?> CreateTeacherAsync(Teacher teacher);
+        Task<Teacher?> UpdateTeacherAsync(Teacher teacher);
+        Task<bool> DeleteTeacherAsync(int id);
+        Task<List<Teacher>> SearchTeachersAsync(string searchTerm);
+        Task<List<ClassRoom>> GetTeacherClassesAsync(int teacherId);
+    }
+
+    public class TeacherService : ITeacherService
+    {
+        private readonly IApiService _apiService;
+
+        public TeacherService(IApiService apiService)
+        {
+            _apiService = apiService;
+        }
+
+        public async Task<List<Teacher>> GetAllTeachersAsync()
+        {
+            var result = await _apiService.GetAsync<List<Teacher>>("api/teachers");
+            return result ?? GetMockTeachers();
+        }
+
+        public async Task<Teacher?> GetTeacherByIdAsync(int id)
+        {
+            return await _apiService.GetAsync<Teacher>($"api/teachers/{id}");
+        }
+
+        public async Task<Teacher?> CreateTeacherAsync(Teacher teacher)
+        {
+            return await _apiService.PostAsync<Teacher>("api/teachers", teacher);
+        }
+
+        public async Task<Teacher?> UpdateTeacherAsync(Teacher teacher)
+        {
+            return await _apiService.PutAsync<Teacher>($"api/teachers/{teacher.Id}", teacher);
+        }
+
+        public async Task<bool> DeleteTeacherAsync(int id)
+        {
+            return await _apiService.DeleteAsync($"api/teachers/{id}");
+        }
+
+        public async Task<List<Teacher>> SearchTeachersAsync(string searchTerm)
+        {
+            var result = await _apiService.GetAsync<List<Teacher>>($"api/teachers/search?term={searchTerm}");
+            return result ?? new List<Teacher>();
+        }
+
+        public async Task<List<ClassRoom>> GetTeacherClassesAsync(int teacherId)
+        {
+            var result = await _apiService.GetAsync<List<ClassRoom>>($"api/teachers/{teacherId}/classes");
+            return result ?? new List<ClassRoom>();
+        }
+
+        private List<Teacher> GetMockTeachers()
+        {
+            return new List<Teacher>
+            {
+                new() { Id = 1, FirstName = "Alice", LastName = "Johnson", Email = "alice.johnson@school.edu", TeacherId = "TCH001", Subject = "Mathematics" },
+                new() { Id = 2, FirstName = "Robert", LastName = "Smith", Email = "robert.smith@school.edu", TeacherId = "TCH002", Subject = "Science" },
+                new() { Id = 3, FirstName = "Maria", LastName = "Garcia", Email = "maria.garcia@school.edu", TeacherId = "TCH003", Subject = "English" },
+                new() { Id = 4, FirstName = "David", LastName = "Brown", Email = "david.brown@school.edu", TeacherId = "TCH004", Subject = "History" },
+                new() { Id = 5, FirstName = "Sarah", LastName = "Wilson", Email = "sarah.wilson@school.edu", TeacherId = "TCH005", Subject = "Art" }
+            };
+        }
+    }
+}
+'@
+
+Set-Content -Path "Services\TeacherService.cs" -Value $teacherServiceContent -Encoding UTF8
+
+Write-Host "   ✅ Created service layer" -ForegroundColor Green
+
+# Phase 4: Create Enhanced Layout
+Write-Host "`n🔧 Phase 4: Creating Layout..." -ForegroundColor Yellow
+
+# MainLayout
+$mainLayoutContent = @'
+@inherits LayoutView
+@using ClassCompassWeb.Services
+@inject ISocketService SocketService
+@inject IJSRuntime JSRuntime
+
+<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+    <main>
+        <div class="top-row px-4">
+            <div class="connection-status">
+                @if (isConnected)
+                {
+                    <span class="badge badge-success">🟢 Connected</span>
+                }
+                else
+                {
+                    <span class="badge badge-danger">🔴 Disconnected</span>
+                }
+            </div>
+            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+        </div>
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+@code {
+    private bool isConnected = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        SocketService.ConnectionStateChanged += OnConnectionStateChanged;
+        await SocketService.StartConnectionAsync();
+        isConnected = SocketService.IsConnected;
+    }
+
+    private async void OnConnectionStateChanged(string state)
+    {
+        isConnected = SocketService.IsConnected;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        SocketService.ConnectionStateChanged -= OnConnectionStateChanged;
+    }
+}
+
+<style>
+    .connection-status {
+        display: inline-block;
+        margin-right: 20px;
+    }
+    .badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: bold;
+    }
+    .badge-success {
+        background-color: #28a745;
+        color: white;
+    }
+    .badge-danger {
+        background-color: #dc3545;
+        color: white;
+    }
+</style>
+'@
+
+Set-Content -Path "Shared\MainLayout.razor" -Value $mainLayoutContent -Encoding UTF8
+
+# NavMenu
+$navMenuContent = @'
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="">📚 ClassCompass</a>
+        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+</div>
+
+<div class="@NavMenuCssClass nav-scrollable" @onclick="CollapseNavMenu">
+    <nav class="flex-column">
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+                <span class="oi oi-home" aria-hidden="true"></span> 🏠 Dashboard
+            </NavLink>
+        </div>
+        <div class="nav-section">
+            <h6 class="nav-section-header">👥 People</h6>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="students">
+                    <span class="oi oi-people" aria-hidden="true"></span> 👨‍🎓 Students
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="teachers">
+                    <span class="oi oi-person" aria-hidden="true"></span> 👨‍🏫 Teachers
+                </NavLink>
+            </div>
+        </div>
+        <div class="nav-section">
+            <h6 class="nav-section-header">📚 Academic</h6>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="grades">
+                    <span class="oi oi-graph" aria-hidden="true"></span> 📊 Grades
+                </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="attendance">
+                    <span class="oi oi-check" aria-hidden="true"></span> 📅 Attendance
+                </NavLink>
+            </div>
+        </div>
+        <div class="nav-section">
+            <h6 class="nav-section-header">🔧 Tools</h6>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="socket-test">
+                    <span class="oi oi-wifi" aria-hidden="true"></span> 🔌 Socket Test
+                </NavLink>
+            </div>
+        </div>
+    </nav>
+</div>
+
+@code {
+    private bool collapseNavMenu = true;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private void CollapseNavMenu()
+    {
+        collapseNavMenu = true;
+    }
+}
+
+<style>
+    .nav-section {
+        margin: 15px 0;
+    }
+    .nav-section-header {
+        color: #6c757d;
+        font-size: 12px;
+        font-weight: bold;
+        margin: 10px 15px 5px 15px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .nav-link {
+        border-radius: 6px;
+        margin: 2px 8px;
+        padding: 8px 12px;
+        transition: all 0.2s ease;
+    }
+    .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1);
+        transform: translateX(4px);
+    }
+    .nav-link.active {
+        background-color: #007bff;
+        color: white;
+    }
+    .navbar-brand {
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+</style>
+'@
+
+Set-Content -Path "Shared\NavMenu.razor" -Value $navMenuContent -Encoding UTF8
+
+Write-Host "   ✅ Created enhanced layout" -ForegroundColor Green
+
+# Phase 5: Create Pages
+Write-Host "`n🔧 Phase 5: Creating Pages..." -ForegroundColor Yellow
+
+# Dashboard
+$dashboardContent = @'
+@page "/"
+@using ClassCompassWeb.Services
+@using ClassCompass.Shared.Models
+@inject IStudentService StudentService
+@inject ITeacherService TeacherService
+@inject ISocketService SocketService
+
+<PageTitle>📊 Dashboard - ClassCompass</PageTitle>
+
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>📊 ClassCompass Dashboard</h1>
+        <p class="text-muted">Welcome back! Here's what's happening in your school.</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">👨‍🎓</div>
+            <div class="stat-content">
+                <h3>@totalStudents</h3>
+                <p>Total Students</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">👨‍🏫</div>
+            <div class="stat-content">
+                <h3>@totalTeachers</h3>
+                <p>Total Teachers</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📚</div>
+            <div class="stat-content">
+                <h3>@totalClasses</h3>
+                <p>Active Classes</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <h3>@averageGrade.ToString("F1")</h3>
+                <p>Average Grade</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <div class="dashboard-card">
+            <h3>📈 Recent Activity</h3>
+            <div class="activity-list">
+                @foreach (var activity in recentActivities)
+                {
+                    <div class="activity-item">
+                        <span class="activity-icon">@activity.Icon</span>
+                        <div class="activity-content">
+                            <p class="activity-text">@activity.Message</p>
+                            <small class="activity-time">@activity.Time.ToString("HH:mm")</small>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>🎯 Quick Actions</h3>
+            <div class="quick-actions">
+                <a href="/students" class="action-btn">
+                    <span class="action-icon">👨‍🎓</span>
+                    <span>Manage Students</span>
+                </a>
+                <a href="/teachers" class="action-btn">
+                    <span class="action-icon">👨‍🏫</span>
+                    <span>Manage Teachers</span>
+                </a>
+                <a href="/grades" class="action-btn">
+                    <span class="action-icon">📊</span>
+                    <span>View Grades</span>
+                </a>
+                <a href="/attendance" class="action-btn">
+                    <span class="action-icon">📅</span>
+                    <span>Take Attendance</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>🔌 Real-time Connection</h3>
+            <div class="connection-info">
+                <p>Status: 
+                    @if (SocketService.IsConnected)
+                    {
+                        <span class="status-connected">🟢 Connected</span>
+                    }
+                    else
+                    {
+                        <span class="status-disconnected">🔴 Disconnected</span>
+                    }
+                </p>
+                <button class="btn btn-primary" @onclick="TestConnection">
+                    🧪 Test Connection
+                </button>
+                @if (!string.IsNullOrEmpty(connectionMessage))
+                {
+                    <div class="alert alert-info mt-2">
+                        @connectionMessage
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int totalStudents = 0;
+    private int totalTeachers = 0;
+    private int totalClasses = 0;
+    private double averageGrade = 0.0;
+    private string connectionMessage = "";
+
+    private List<Activity> recentActivities = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+        LoadMockData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            var students = await StudentService.GetAllStudentsAsync();
+            var teachers = await TeacherService.GetAllTeachersAsync();
+            
+            totalStudents = students.Count;
+            totalTeachers = teachers.Count;
+            totalClasses = 15; // Mock data
+            averageGrade = 85.5; // Mock data
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
+
+    private void LoadMockData()
+    {
+        recentActivities = new List<Activity>
+        {
+            new() { Icon = "✅", Message = "New student enrolled: John Smith", Time = DateTime.Now.AddMinutes(-5) },
+            new() { Icon = "📊", Message = "Grades updated for Math Class", Time = DateTime.Now.AddMinutes(-15) },
+            new() { Icon = "📝", Message = "Homework assigned: Science Project", Time = DateTime.Now.AddMinutes(-30) },
+            new() { Icon = "👨‍🏫", Message = "Teacher updated profile: Ms. Johnson", Time = DateTime.Now.AddHours(-1) }
+        };
+    }
+
+    private async Task TestConnection()
+    {
+        try
+        {
+            if (SocketService.IsConnected)
+            {
+                await SocketService.SendMessageAsync("TestMessage", new { Message = "Dashboard test", Timestamp = DateTime.Now });
+                connectionMessage = "✅ Test message sent successfully!";
+            }
+            else
+            {
+                connectionMessage = "❌ Not connected to server";
+            }
+        }
+        catch (Exception ex)
+        {
+            connectionMessage = $"❌ Connection test failed: {ex.Message}";
+        }
+
+        StateHasChanged();
+        
+        // Clear message after 3 seconds
+        await Task.Delay(3000);
+        connectionMessage = "";
+        StateHasChanged();
+    }
+
+    public class Activity
+    {
+        public string Icon { get; set; } = "";
+        public string Message { get; set; } = "";
+        public DateTime Time { get; set; }
+    }
+}
+
+<style>
+    .dashboard-container {
+        padding: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    .dashboard-header {
+        margin-bottom: 30px;
+        text-align: center;
+    }
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    .stat-card {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 25px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        transition: transform 0.3s ease;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    .stat-icon {
+        font-size: 3rem;
+        margin-right: 20px;
+    }
+    .stat-content h3 {
+        font-size: 2.5rem;
+        margin: 0;
+        font-weight: bold;
+    }
+    .stat-content p {
+        margin: 5px 0 0 0;
+        opacity: 0.9;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 25px;
+    }
+    .dashboard-card {
+        background: white;
+        border-radius: 12px;
+        padding: 25px;
+        box-shadow: 0 2px 15px rgba(0,0,0,0.08);
+        border: 1px solid #e9ecef;
+    }
+    .dashboard-card h3 {
+        margin-top: 0;
+        margin-bottom: 20px;
+        color: #495057;
+        border-bottom: 2

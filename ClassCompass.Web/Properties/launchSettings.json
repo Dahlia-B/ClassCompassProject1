@@ -1,0 +1,13 @@
+﻿{
+    "profiles":  {
+                     "WebAssembly":  {
+                                         "dotnetRunMessages":  true,
+                                         "commandName":  "Project",
+                                         "environmentVariables":  {
+                                                                      "ASPNETCORE_ENVIRONMENT":  "Development"
+                                                                  },
+                                         "launchBrowser":  true,
+                                         "applicationUrl":  "https://localhost:7000;http://localhost:5000"
+                                     }
+                 }
+}

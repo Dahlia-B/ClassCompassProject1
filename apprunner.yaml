@@ -1,0 +1,17 @@
+version: 1.0
+runtime: dotnet8
+build:
+  commands:
+    - dotnet publish -c Release -o out
+
+run:
+  command: dotnet out/ClassCompassApi.dll
+  network:
+    port: 5000
+  env:
+    - name: ASPNETCORE_URLS
+      value: "http://*:5000"
+    - name: ASPNETCORE_ENVIRONMENT
+      value: "Production"
+    - name: ConnectionStrings__DefaultConnection
+      value: "YOUR_DATABASE_CONNECTION_STRING_HERE"

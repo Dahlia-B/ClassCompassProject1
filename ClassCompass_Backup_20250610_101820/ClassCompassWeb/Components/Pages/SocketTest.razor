@@ -1,0 +1,421 @@
+﻿@page "/socket-test"
+@using ClassCompassWeb.Services.Api
+@using ClassCompassWeb.Services.Socket
+@inject IApiService ApiService
+@inject ISocketService SocketService
+
+<PageTitle>Socket Test - ClassCompass</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h2>🔌 Socket Connection Test</h2>
+            <p class="text-muted">Test real-time communication with the ClassCompass Socket Server</p>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🔗 Connection Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <span class="badge @connectionStatusClass me-2">@connectionStatus</span>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="CheckConnection">
+                            🔄 Check Status
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(lastStatusCheck))
+                    {
+                        <small class="text-muted">Last checked: @lastStatusCheck</small>
+                    }
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📊 Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col">
+                            <h4 class="text-primary">@connectedClients</h4>
+                            <small>Connected Clients</small>
+                        </div>
+                        <div class="col">
+                            <h4 class="text-success">@messagesSent</h4>
+                            <small>Messages Sent</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Testing -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>📨 Message Testing</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Broadcast Test -->
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>📢 Broadcast Message</h6>
+                                <p class="small text-muted">Send a message to all connected clients</p>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" placeholder="Enter broadcast message..." @bind="broadcastMessage" />
+                                </div>
+                                <button class="btn btn-primary w-100" @onclick="SendBroadcast" disabled="@isSending">
+                                    @if (isSending)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    📢 Send Broadcast
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- User Notification Test -->
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>👤 User Notification</h6>
+                                <p class="small text-muted">Send a message to a specific user</p>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" placeholder="User ID..." @bind="targetUserId" />
+                                </div>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" placeholder="Message..." @bind="userMessage" />
+                                </div>
+                                <button class="btn btn-success w-100" @onclick="SendUserNotification" disabled="@isSending">
+                                    @if (isSending)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    👤 Send to User
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Class Notification Test -->
+                        <div class="col-md-4 mb-3">
+                            <div class="border rounded p-3">
+                                <h6>📚 Class Notification</h6>
+                                <p class="small text-muted">Send a message to an entire class</p>
+                                <div class="input-group mb-2">
+                                    <select class="form-select" @bind="selectedClassId">
+                                        <option value="">Select Class</option>
+                                        <option value="math101">Math 101</option>
+                                        <option value="english102">English 102</option>
+                                        <option value="science103">Science 103</option>
+                                        <option value="history104">History 104</option>
+                                    </select>
+                                </div>
+                                <div class="input-group mb-2">
+                                    <input type="text" class="form-control" placeholder="Class message..." @bind="classMessage" />
+                                </div>
+                                <button class="btn btn-info w-100" @onclick="SendClassNotification" disabled="@isSending">
+                                    @if (isSending)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-1"></span>
+                                    }
+                                    📚 Send to Class
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Test Buttons -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>⚡ Quick Tests</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-primary" @onclick="() => SendQuickBroadcast('Hello from ClassCompass Web!')">
+                            📢 Quick Broadcast
+                        </button>
+                        <button class="btn btn-outline-success" @onclick="() => SendQuickNotification('student_123', 'Test notification for you!')">
+                            👨‍🎓 Test Student Notification
+                        </button>
+                        <button class="btn btn-outline-warning" @onclick="() => SendQuickNotification('teacher_456', 'Hello teacher!')">
+                            👨‍🏫 Test Teacher Notification
+                        </button>
+                        <button class="btn btn-outline-info" @onclick="() => SendQuickClass('math101', 'Class reminder: Assignment due tomorrow!')">
+                            📚 Test Class Message
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Log -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5>📝 Message Log</h5>
+                    <button class="btn btn-sm btn-outline-secondary" @onclick="ClearLog">
+                        🗑️ Clear Log
+                    </button>
+                </div>
+                <div class="card-body">
+                    @if (messageLog.Any())
+                    {
+                        <div style="max-height: 300px; overflow-y: auto;">
+                            @foreach (var logEntry in messageLog.OrderByDescending(l => l.Timestamp))
+                            {
+                                <div class="border-bottom pb-2 mb-2">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <span class="badge @GetLogEntryClass(logEntry.Type)">@logEntry.Type</span>
+                                            <span class="ms-2">@logEntry.Message</span>
+                                        </div>
+                                        <small class="text-muted">@logEntry.Timestamp.ToString("HH:mm:ss")</small>
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(logEntry.Details))
+                                    {
+                                        <small class="text-muted d-block mt-1">@logEntry.Details</small>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center">No messages logged yet. Send some test messages to see them here!</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string connectionStatus = "Checking...";
+    private string connectionStatusClass = "bg-secondary";
+    private string lastStatusCheck = "";
+    private int connectedClients = 0;
+    private int messagesSent = 0;
+    private bool isSending = false;
+
+    // Message input fields
+    private string broadcastMessage = "";
+    private string targetUserId = "";
+    private string userMessage = "";
+    private string selectedClassId = "";
+    private string classMessage = "";
+
+    // Message log
+    private List<LogEntry> messageLog = new();
+
+    public class LogEntry
+    {
+        public DateTime Timestamp { get; set; }
+        public string Type { get; set; } = "";
+        public string Message { get; set; } = "";
+        public string Details { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CheckConnection();
+    }
+
+    private async Task CheckConnection()
+    {
+        try
+        {
+            var response = await ApiService.GetAsync<dynamic>("api/socket/status");
+            if (response != null)
+            {
+                connectionStatus = "🔌 Connected";
+                connectionStatusClass = "bg-success";
+                // Parse connected clients from response if available
+                // connectedClients = response.connectedClients ?? 0;
+                connectedClients = 0; // Placeholder
+            }
+            else
+            {
+                connectionStatus = "⚠️ Disconnected";
+                connectionStatusClass = "bg-warning";
+            }
+        }
+        catch (Exception ex)
+        {
+            connectionStatus = "❌ Error";
+            connectionStatusClass = "bg-danger";
+            AddLogEntry("Error", "Connection check failed", ex.Message);
+        }
+
+        lastStatusCheck = DateTime.Now.ToString("HH:mm:ss");
+        StateHasChanged();
+    }
+
+    private async Task SendBroadcast()
+    {
+        if (string.IsNullOrWhiteSpace(broadcastMessage)) return;
+        
+        isSending = true;
+        try
+        {
+            await SocketService.SendBroadcastAsync(broadcastMessage);
+            AddLogEntry("Broadcast", $"Sent: {broadcastMessage}");
+            messagesSent++;
+            broadcastMessage = "";
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry("Error", "Broadcast failed", ex.Message);
+        }
+        finally
+        {
+            isSending = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SendUserNotification()
+    {
+        if (string.IsNullOrWhiteSpace(targetUserId) || string.IsNullOrWhiteSpace(userMessage)) return;
+        
+        isSending = true;
+        try
+        {
+            await SocketService.SendNotificationAsync(targetUserId, userMessage);
+            AddLogEntry("User Notification", $"Sent to {targetUserId}: {userMessage}");
+            messagesSent++;
+            targetUserId = "";
+            userMessage = "";
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry("Error", "User notification failed", ex.Message);
+        }
+        finally
+        {
+            isSending = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SendClassNotification()
+    {
+        if (string.IsNullOrWhiteSpace(selectedClassId) || string.IsNullOrWhiteSpace(classMessage)) return;
+        
+        isSending = true;
+        try
+        {
+            await SocketService.SendToClassAsync(selectedClassId, classMessage);
+            AddLogEntry("Class Notification", $"Sent to {selectedClassId}: {classMessage}");
+            messagesSent++;
+            classMessage = "";
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry("Error", "Class notification failed", ex.Message);
+        }
+        finally
+        {
+            isSending = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SendQuickBroadcast(string message)
+    {
+        try
+        {
+            await SocketService.SendBroadcastAsync(message);
+            AddLogEntry("Quick Broadcast", message);
+            messagesSent++;
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry("Error", "Quick broadcast failed", ex.Message);
+        }
+        StateHasChanged();
+    }
+
+    private async Task SendQuickNotification(string userId, string message)
+    {
+        try
+        {
+            await SocketService.SendNotificationAsync(userId, message);
+            AddLogEntry("Quick Notification", $"Sent to {userId}: {message}");
+            messagesSent++;
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry("Error", "Quick notification failed", ex.Message);
+        }
+        StateHasChanged();
+    }
+
+    private async Task SendQuickClass(string classId, string message)
+    {
+        try
+        {
+            await SocketService.SendToClassAsync(classId, message);
+            AddLogEntry("Quick Class", $"Sent to {classId}: {message}");
+            messagesSent++;
+        }
+        catch (Exception ex)
+        {
+            AddLogEntry("Error", "Quick class message failed", ex.Message);
+        }
+        StateHasChanged();
+    }
+
+    private void AddLogEntry(string type, string message, string details = "")
+    {
+        messageLog.Add(new LogEntry
+        {
+            Timestamp = DateTime.Now,
+            Type = type,
+            Message = message,
+            Details = details
+        });
+        
+        // Keep only last 50 entries
+        if (messageLog.Count > 50)
+        {
+            messageLog = messageLog.TakeLast(50).ToList();
+        }
+    }
+
+    private void ClearLog()
+    {
+        messageLog.Clear();
+        StateHasChanged();
+    }
+
+    private string GetLogEntryClass(string type)
+    {
+        return type.ToLower() switch
+        {
+            "broadcast" => "bg-primary",
+            "user notification" => "bg-success",
+            "class notification" => "bg-info",
+            "quick broadcast" => "bg-primary",
+            "quick notification" => "bg-success",
+            "quick class" => "bg-info",
+            "error" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+}

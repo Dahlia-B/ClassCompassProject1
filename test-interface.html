@@ -1,0 +1,213 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClassCompass - API Test Interface</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .endpoint-card {
+            background: #f8f9ff;
+            border: 2px solid #e8f0ff;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .endpoint-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.15);
+        }
+        
+        .endpoint-card h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .endpoint-url {
+            font-family: 'Courier New', monospace;
+            background: #f1f3f4;
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 13px;
+            border-left: 3px solid #667eea;
+        }
+        
+        .test-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .test-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .swagger-button {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        }
+        
+        .response-area {
+            background: #1a1a1a;
+            color: #00ff41;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 250px;
+            overflow-y: auto;
+            margin-top: 20px;
+            display: none;
+            border: 1px solid #333;
+        }
+        
+        .response-area.error {
+            color: #ff6b6b;
+            border-color: #ff6b6b;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+            margin-right: 10px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧭 ClassCompass</h1>
+            <p>Local Development & API Testing Dashboard</p>
+        </div>
+        
+        <div class="content">
+            <h2><span class="status-indicator"></span>API Endpoints</h2>
+            
+            <div class="endpoint-card">
+                <h3>🏥 Health Check</h3>
+                <p>Verify that your API server is running and responding properly</p>
+                <div class="endpoint-url">GET http://localhost:5003/health</div>
+                <button class="test-button" onclick="testEndpoint('/health', 'health')">Test Health</button>
+                <div class="response-area" id="health-response"></div>
+            </div>
+            
+            <div class="endpoint-card">
+                <h3>🧪 API Test</h3>
+                <p>Get API information including timestamp and environment details</p>
+                <div class="endpoint-url">GET http://localhost:5003/api/test</div>
+                <button class="test-button" onclick="testEndpoint('/api/test', 'api-test')">Test API</button>
+                <div class="response-area" id="api-test-response"></div>
+            </div>
+            
+            <div class="endpoint-card">
+                <h3>🏠 Root Endpoint</h3>
+                <p>Basic API welcome message and status verification</p>
+                <div class="endpoint-url">GET http://localhost:5003/</div>
+                <button class="test-button" onclick="testEndpoint('/', 'root')">Test Root</button>
+                <div class="response-area" id="root-response"></div>
+            </div>
+            
+            <div class="endpoint-card">
+                <h3>📚 Swagger Documentation</h3>
+                <p>Interactive API documentation and testing interface</p>
+                <div class="endpoint-url">GET http://localhost:5003/swagger</div>
+                <button class="test-button swagger-button" onclick="openSwagger()">Open Swagger</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5003';
+        
+        async function testEndpoint(endpoint, responseId) {
+            const responseArea = document.getElementById(`${responseId}-response`);
+            
+            try {
+                responseArea.style.display = 'block';
+                responseArea.className = 'response-area';
+                responseArea.textContent = '⏳ Testing endpoint...';
+                
+                const response = await fetch(`${API_BASE}${endpoint}`);
+                const data = await response.text();
+                
+                let formattedResponse = `Status: ${response.status} ${response.statusText}\n`;
+                formattedResponse += `Timestamp: ${new Date().toLocaleString()}\n`;
+                formattedResponse += `Response:\n${data}`;
+                
+                responseArea.textContent = formattedResponse;
+                if (!response.ok) {
+                    responseArea.className = 'response-area error';
+                }
+                
+            } catch (error) {
+                responseArea.style.display = 'block';
+                responseArea.className = 'response-area error';
+                responseArea.textContent = `Error: ${error.message}\n\nMake sure your API is running:\ncd ClassCompassApi && dotnet run`;
+            }
+        }
+        
+        function openSwagger() {
+            window.open(`${API_BASE}/swagger`, '_blank');
+        }
+        
+        // Auto-test health endpoint when page loads
+        window.onload = () => {
+            setTimeout(() => testEndpoint('/health', 'health'), 1000);
+        };
+    </script>
+</body>
+</html>

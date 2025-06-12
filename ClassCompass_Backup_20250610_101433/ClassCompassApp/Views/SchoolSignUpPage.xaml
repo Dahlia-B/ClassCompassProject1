@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="ClassCompassApp.Views.SchoolSignUpPage"
+             Title="School Registration">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="15">
+            <Label Text="Register Your School" 
+                   FontSize="24" 
+                   HorizontalOptions="Center"
+                   TextColor="{StaticResource Primary}" />
+
+            <Entry x:Name="SchoolNameEntry" 
+                   Placeholder="School Name"
+                   FontSize="16" />
+
+            <Entry x:Name="SchoolIdEntry" 
+                   Placeholder="School ID" 
+                   Keyboard="Numeric"
+                   FontSize="16" />
+
+            <Entry x:Name="ClassCountEntry" 
+                   Placeholder="Number of Classes" 
+                   Keyboard="Numeric"
+                   FontSize="16" />
+
+            <Button Text="Register School" 
+                    FontAttributes="Bold"
+                    BackgroundColor="{StaticResource Primary}"
+                    TextColor="White"
+                    Clicked="OnRegisterSchoolClicked" />
+
+            <Button Text="Back to Home" 
+                    BackgroundColor="Gray"
+                    TextColor="White"
+                    Clicked="OnBackClicked" />
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

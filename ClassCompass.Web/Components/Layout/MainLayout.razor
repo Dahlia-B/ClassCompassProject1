@@ -1,0 +1,39 @@
+﻿<div class="page">
+    <div class="sidebar">
+        <NavMenu />
+    </div>
+
+    <main>
+        <div class="top-row px-4">
+            <h3>Class Compass</h3>
+        </div>
+
+        <article class="content px-4">
+            @Body
+        </article>
+    </main>
+</div>
+
+<style>
+    .page {
+        display: flex;
+        height: 100vh;
+    }
+    
+    .sidebar {
+        width: 250px;
+        background-color: #f8f9fa;
+    }
+    
+    main {
+        flex: 1;
+        padding: 1rem;
+    }
+    
+    .top-row {
+        background-color: #fff;
+        border-bottom: 1px solid #dee2e6;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+</style>

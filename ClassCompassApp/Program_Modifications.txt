@@ -1,0 +1,13 @@
+// Add these lines to your Program.cs file:
+
+// Add encryption service
+builder.Services.AddSingleton<IEncryptionService, EncryptionService>();
+
+// Add encrypted socket services
+builder.Services.AddEncryptedSocketServices(port: 8080, maxConnections: 1000);
+
+// If using controllers, ensure you have:
+builder.Services.AddControllers();
+
+// In the Configure section, ensure you have:
+app.MapControllers();

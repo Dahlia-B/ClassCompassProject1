@@ -1,0 +1,6 @@
+@ClassCompassApi_Standalone_HostAddress = http://localhost:5184
+
+GET {{ClassCompassApi_Standalone_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

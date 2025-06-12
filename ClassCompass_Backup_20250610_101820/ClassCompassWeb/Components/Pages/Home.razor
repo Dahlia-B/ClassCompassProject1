@@ -1,0 +1,191 @@
+﻿@page "/"
+@using ClassCompassWeb.Services.Api
+@using ClassCompassWeb.Services.Socket
+@inject IApiService ApiService
+@inject ISocketService SocketService
+@inject IJSRuntime JSRuntime
+
+<PageTitle>ClassCompass Dashboard</PageTitle>
+
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4">📚 ClassCompass Dashboard</h1>
+            <p class="lead">Welcome to your comprehensive class management system</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-primary">👨‍🎓</h3>
+                    <h4 class="card-text">@studentCount</h4>
+                    <p class="card-text">Students</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-success">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-success">👨‍🏫</h3>
+                    <h4 class="card-text">@teacherCount</h4>
+                    <p class="card-text">Teachers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-info">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-info">📖</h3>
+                    <h4 class="card-text">@classCount</h4>
+                    <p class="card-text">Classes</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card border-warning">
+                <div class="card-body text-center">
+                    <h3 class="card-title text-warning">📊</h3>
+                    <h4 class="card-text">@gradeCount</h4>
+                    <p class="card-text">Grades</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🚀 Quick Actions</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-2">
+                            <button class="btn btn-primary w-100" @onclick="() => NavigateToPage('students')">
+                                👨‍🎓 Manage Students
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <button class="btn btn-success w-100" @onclick="() => NavigateToPage('teachers')">
+                                👨‍🏫 Manage Teachers
+                            </button>
+                        </div>
+                        <div class="col-md-4 mb-2">
+                            <button class="btn btn-info w-100" @onclick="() => NavigateToPage('grades')">
+                                📊 View Grades
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Socket Status -->
+    <div class="row">
+        <div class="col">
+            <div class="card">
+                <div class="card-header">
+                    <h5>🔌 Real-time Connection Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        <span class="badge @socketStatusClass me-2">@socketStatusText</span>
+                        <button class="btn btn-sm btn-outline-primary" @onclick="TestSocketConnection">
+                            Test Socket Connection
+                        </button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(lastSocketMessage))
+                    {
+                        <div class="mt-2">
+                            <small class="text-muted">Last message: @lastSocketMessage</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private int studentCount = 0;
+    private int teacherCount = 0;
+    private int classCount = 0;
+    private int gradeCount = 0;
+    
+    private string socketStatusText = "Checking...";
+    private string socketStatusClass = "bg-secondary";
+    private string lastSocketMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+        await CheckSocketStatus();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        try
+        {
+            // These would connect to your actual API endpoints
+            studentCount = 150; // Placeholder - replace with actual API call
+            teacherCount = 25;  // Placeholder - replace with actual API call
+            classCount = 12;    // Placeholder - replace with actual API call
+            gradeCount = 450;   // Placeholder - replace with actual API call
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+        }
+    }
+
+    private async Task CheckSocketStatus()
+    {
+        try
+        {
+            var response = await ApiService.GetAsync<dynamic>("api/socket/status");
+            if (response != null)
+            {
+                socketStatusText = "🔌 Connected";
+                socketStatusClass = "bg-success";
+            }
+            else
+            {
+                socketStatusText = "⚠️ Disconnected";
+                socketStatusClass = "bg-warning";
+            }
+        }
+        catch (Exception ex)
+        {
+            socketStatusText = "❌ Error";
+            socketStatusClass = "bg-danger";
+            Console.WriteLine($"Socket status check error: {ex.Message}");
+        }
+        
+        StateHasChanged();
+    }
+
+    private async Task TestSocketConnection()
+    {
+        try
+        {
+            await SocketService.SendBroadcastAsync($"Test message from dashboard at {DateTime.Now:HH:mm:ss}");
+            lastSocketMessage = $"Broadcast sent at {DateTime.Now:HH:mm:ss}";
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            lastSocketMessage = $"Error: {ex.Message}";
+            StateHasChanged();
+        }
+    }
+
+    private async Task NavigateToPage(string page)
+    {
+        await JSRuntime.InvokeVoidAsync("eval", $"window.location.href = '{page}'");
+    }
+}
